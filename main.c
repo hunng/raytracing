@@ -3,6 +3,11 @@
 #include <stdint.h>
 #include <time.h>
 
+#ifndef OMP
+#include <omp.h>
+#define OMP 1
+#endif
+
 #include "primitives.h"
 #include "raytracing.h"
 
@@ -33,6 +38,9 @@ static double diff_in_second(struct timespec t1, struct timespec t2)
 
 int main()
 {
+    /* number of child thread for openmp */
+    int thread_count = 512;
+
     uint8_t *pixels;
     light_node lights = NULL;
     rectangular_node rectangulars = NULL;
@@ -49,8 +57,8 @@ int main()
     printf("# Rendering scene\n");
     /* do the ray tracing with the given geometry */
     clock_gettime(CLOCK_REALTIME, &start);
-    raytracing(pixels, background,
-               rectangulars, spheres, lights, &view, ROWS, COLS);
+    #   pragma omp parallel num_threads(thread_count)
+    raytracing(pixels, background, rectangulars, spheres, lights, &view, ROWS, COLS);
     clock_gettime(CLOCK_REALTIME, &end);
     {
         FILE *outfile = fopen(OUT_FILENAME, "wb");

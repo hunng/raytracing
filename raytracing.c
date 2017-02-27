@@ -458,6 +458,13 @@ void raytracing(uint8_t *pixels, color background_color,
                 light_node lights, const viewpoint *view,
                 int width, int height)
 {
+    /* for openmp */
+    int my_rank = omp_get_thread_num();
+    int thread_count = omp_get_num_threads();
+    int range = height / thread_count;
+    int start = my_rank * range;
+    int end = start + range;
+
     point3 u, v, w, d;
     color object_color = { 0.0, 0.0, 0.0 };
 
@@ -467,7 +474,7 @@ void raytracing(uint8_t *pixels, color background_color,
     idx_stack stk;
 
     int factor = sqrt(SAMPLES);
-    for (int j = 0; j < height; j++) {
+    for (int j = start; j < end; j++) {
         for (int i = 0; i < width; i++) {
             double r = 0, g = 0, b = 0;
             /* MSAA */
