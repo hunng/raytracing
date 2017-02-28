@@ -3,9 +3,11 @@
 #include <stdint.h>
 #include <time.h>
 
-#ifndef OMP
-#include <omp.h>
+//#define PTR 1
 #define OMP 1
+
+#ifdef OMP
+#include <omp.h>
 #endif
 
 #include "primitives.h"
@@ -38,8 +40,10 @@ static double diff_in_second(struct timespec t1, struct timespec t2)
 
 int main()
 {
-    /* number of child thread for openmp */
+
+#ifdef OMP    /* number of child thread for openmp */
     int thread_count = 512;
+#endif
 
     uint8_t *pixels;
     light_node lights = NULL;
@@ -54,8 +58,9 @@ int main()
     pixels = malloc(sizeof(unsigned char) * ROWS * COLS * 3);
     if (!pixels) exit(-1);
 
+#ifdef PTR
     /* prepared pthread needed information */
-    inputneed *need = malloc(sizeof(inputneed *));
+    inputneed *need = malloc(sizeof(inputneed));
     need->pixels = pixels;
     need->background_color[0] = background[0];
     need->background_color[1] = background[1];
@@ -64,7 +69,9 @@ int main()
     need->spheres = spheres;
     need->lights = lights;
     need->view = &view;
-    free(need);
+    need->width = 512;
+    need->height = 512;
+#endif
 
 
     printf("# Rendering scene\n");
@@ -72,8 +79,14 @@ int main()
     clock_gettime(CLOCK_REALTIME, &start);
 #ifdef OMP
     #pragma omp parallel num_threads(thread_count)
-#endif
     raytracing(pixels, background, rectangulars, spheres, lights, &view, ROWS, COLS);
+#elif defined(PTR)
+    raytracingWS(need);
+#else
+    raytracing(pixels, background, rectangulars, spheres, lights, &view, ROWS, COLS);
+#endif
+
+
     clock_gettime(CLOCK_REALTIME, &end);
     {
         FILE *outfile = fopen(OUT_FILENAME, "wb");
@@ -84,6 +97,9 @@ int main()
     delete_rectangular_list(&rectangulars);
     delete_sphere_list(&spheres);
     delete_light_list(&lights);
+#ifdef PTR
+    free(need);
+#endif
     free(pixels);
     printf("Done!\n");
     printf("Execution time of raytracing() : %lf sec\n", diff_in_second(start, end));

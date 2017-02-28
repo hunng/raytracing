@@ -11,6 +11,9 @@
 #define MIN_DISTANCE 0.00001
 #define SAMPLES 4
 
+#define OMP 1
+#include <omp.h>
+
 #define SQUARE(x) (x * x)
 #define MAX(a, b) (a > b ? a : b)
 
@@ -458,12 +461,15 @@ void raytracing(uint8_t *pixels, color background_color,
                 light_node lights, const viewpoint *view,
                 int width, int height)
 {
-    /* for openmp */
+    int start = 0;
+    int end = height;
+#ifdef OMP    /* for openmp */
     int my_rank = omp_get_thread_num();
     int thread_count = omp_get_num_threads();
     int range = height / thread_count;
-    int start = my_rank * range;
-    int end = start + range;
+    start = my_rank * range;
+    end = start + range;
+#endif
 
     point3 u, v, w, d;
     color object_color = { 0.0, 0.0, 0.0 };
@@ -502,4 +508,13 @@ void raytracing(uint8_t *pixels, color background_color,
             }
         }
     }
+}
+
+void *raytracingWS(inputneed *input)
+{
+    raytracing(input->pixels, input->background_color,
+               input->rectangulars, input->spheres,
+               input->lights, input->view,
+               input->width, input->height);
+    return NULL;
 }

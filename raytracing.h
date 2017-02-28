@@ -5,9 +5,8 @@
 #include "idx_stack.h"
 #include <stdint.h>
 
-#ifndef OMP
+#ifdef OMP
 #include <omp.h>
-#define OMP 1
 #endif
 
 typedef struct __INPUT_NEED {
