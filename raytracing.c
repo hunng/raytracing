@@ -11,8 +11,12 @@
 #define MIN_DISTANCE 0.00001
 #define SAMPLES 4
 
-#define OMP 1
+#define PTR 1
+//#define OMP 1
+
+#ifdef OMP
 #include <omp.h>
+#endif
 
 #define SQUARE(x) (x * x)
 #define MAX(a, b) (a > b ? a : b)
@@ -459,16 +463,19 @@ static unsigned int ray_color(const point3 e, double t,
 void raytracing(uint8_t *pixels, color background_color,
                 rectangular_node rectangulars, sphere_node spheres,
                 light_node lights, const viewpoint *view,
-                int width, int height)
+                int width, int height, int start, int end)
 {
-    int start = 0;
-    int end = height;
+
 #ifdef OMP    /* for openmp */
     int my_rank = omp_get_thread_num();
     int thread_count = omp_get_num_threads();
     int range = height / thread_count;
     start = my_rank * range;
     end = start + range;
+#elif defined (PTR)
+#else
+    start = 0;
+    end = height;
 #endif
 
     point3 u, v, w, d;
@@ -512,9 +519,16 @@ void raytracing(uint8_t *pixels, color background_color,
 
 void *raytracingWS(inputneed *input)
 {
+    printf("i am %d thread\n", input->rank);
+    int my_rank = input->rank;
+    int range = input->height / input->pthread_count;
+    int start = my_rank * range;
+    int end = start + range;
+
     raytracing(input->pixels, input->background_color,
                input->rectangulars, input->spheres,
                input->lights, input->view,
-               input->width, input->height);
+               input->width, input->height,
+               start, end);
     return NULL;
 }
