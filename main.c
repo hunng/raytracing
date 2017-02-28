@@ -54,10 +54,25 @@ int main()
     pixels = malloc(sizeof(unsigned char) * ROWS * COLS * 3);
     if (!pixels) exit(-1);
 
+    /* prepared pthread needed information */
+    inputneed *need = malloc(sizeof(inputneed *));
+    need->pixels = pixels;
+    need->background_color[0] = background[0];
+    need->background_color[1] = background[1];
+    need->background_color[2] = background[2];
+    need->rectangulars = rectangulars;
+    need->spheres = spheres;
+    need->lights = lights;
+    need->view = &view;
+    free(need);
+
+
     printf("# Rendering scene\n");
     /* do the ray tracing with the given geometry */
     clock_gettime(CLOCK_REALTIME, &start);
-    #   pragma omp parallel num_threads(thread_count)
+#ifdef OMP
+    #pragma omp parallel num_threads(thread_count)
+#endif
     raytracing(pixels, background, rectangulars, spheres, lights, &view, ROWS, COLS);
     clock_gettime(CLOCK_REALTIME, &end);
     {
