@@ -3,14 +3,10 @@
 #include <stdint.h>
 #include <time.h>
 
-#define PTR 1
-//#define OMP 1
 
 #ifdef OMP
 #include <omp.h>
-#endif
-
-#ifdef PTR
+#elif defined (PTR)
 #include <pthread.h>
 #endif
 
@@ -64,7 +60,7 @@ int main()
 
 #ifdef PTR
     /* prepared pthread needed information */
-    int pthread_count = 256;
+    int pthread_count = 512;
     pthread_t *thread_handles;
     thread_handles = malloc(pthread_count * sizeof(pthread_t));
 
@@ -101,7 +97,7 @@ int main()
         pthread_join(thread_handles[i], NULL);
     }
 #else
-    raytracing(pixels, background, rectangulars, spheres, lights, &view, ROWS, COLS);
+    raytracing(pixels, background, rectangulars, spheres, lights, &view, ROWS, COLS, 0, 512);
 #endif
 
 

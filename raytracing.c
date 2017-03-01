@@ -11,9 +11,6 @@
 #define MIN_DISTANCE 0.00001
 #define SAMPLES 4
 
-#define PTR 1
-//#define OMP 1
-
 #ifdef OMP
 #include <omp.h>
 #endif

@@ -8,11 +8,19 @@ $(GIT_HOOKS):
 	@scripts/install-git-hooks
 	@echo
 
+#set whether use Openmp or Pthread
+#MFLAGS = -fopenmp -D OMP
+#MLDFLAGS = -fopenmp
+MFLAGS = -lpthread -D PTR
+MLDFLAGS = -lpthread
+
 CC ?= gcc
 CFLAGS = \
-	-std=gnu99 -Wall -O0 -g -lpthread
+	-std=gnu99 -Wall -O0 -g
+CFLAGS += $(MFLAGS)
 LDFLAGS = \
-	-lm -lpthread
+	-lm
+LDFLAGS += $(MLDFLAGS)
 
 ifeq ($(strip $(PROFILE)),1)
 PROF_FLAGS = -pg
@@ -27,7 +35,6 @@ OBJS := \
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c -o $@ $<
-
 
 $(EXEC): $(OBJS)
 	$(CC) -o $@ $^ $(LDFLAGS)
