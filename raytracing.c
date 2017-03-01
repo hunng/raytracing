@@ -519,7 +519,6 @@ void raytracing(uint8_t *pixels, color background_color,
 
 void *raytracingWS(inputneed *input)
 {
-    printf("i am %d thread\n", input->rank);
     int my_rank = input->rank;
     int range = input->height / input->pthread_count;
     int start = my_rank * range;

@@ -64,23 +64,26 @@ int main()
 
 #ifdef PTR
     /* prepared pthread needed information */
-    /* https://github.com/ierosodin/raytracing/blob/pthread/main.c */
-    int pthread_count = 2;
+    int pthread_count = 256;
     pthread_t *thread_handles;
     thread_handles = malloc(pthread_count * sizeof(pthread_t));
 
-    inputneed *need = malloc(sizeof(inputneed));
-    need->pthread_count = pthread_count;
-    need->pixels = pixels;
-    need->background_color[0] = background[0];
-    need->background_color[1] = background[1];
-    need->background_color[2] = background[2];
-    need->rectangulars = rectangulars;
-    need->spheres = spheres;
-    need->lights = lights;
-    need->view = &view;
-    need->width = 512;
-    need->height = 512;
+    inputneed **need = malloc(pthread_count * sizeof(inputneed *));
+    for (int i = 0; i < pthread_count; i++) {
+        need[i] = malloc(sizeof(inputneed));
+        need[i]->pthread_count = pthread_count;
+        need[i]->pixels = pixels;
+        need[i]->background_color[0] = background[0];
+        need[i]->background_color[1] = background[1];
+        need[i]->background_color[2] = background[2];
+        need[i]->rectangulars = rectangulars;
+        need[i]->spheres = spheres;
+        need[i]->lights = lights;
+        need[i]->view = &view;
+        need[i]->width = 512;
+        need[i]->height = 512;
+        need[i]->rank = i;
+    }
 #endif
 
 
@@ -91,10 +94,8 @@ int main()
     #pragma omp parallel num_threads(thread_count)
     raytracing(pixels, background, rectangulars, spheres, lights, &view, ROWS, COLS, 0, 512);
 #elif defined(PTR)
-    need->rank = 0;
-    pthread_create(&thread_handles[0], NULL, raytracingWS, (void *) need);
-    need->rank = 1;
-    pthread_create(&thread_handles[1], NULL, raytracingWS, (void *) need);
+    for (int i = 0; i < pthread_count; i++)
+        pthread_create(&thread_handles[i], NULL, raytracingWS, (void *) need[i]);
 
     for (int i = 0; i < pthread_count; i++) {
         pthread_join(thread_handles[i], NULL);
